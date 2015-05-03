@@ -7,12 +7,15 @@
 (def slack-webhook-url
   (env :slack-webhook-url))
 
+(def slack-default-channel
+  (env :slack-default-channel))
+
 (defn send-message [text & {:keys [channel username]}]
   (let [options {:content-type :json
                  :body (generate-string
                         {:text text
                          :icon_emoji ":phone:"
-                         :channel (or channel "@dylan")
+                         :channel (or channel slack-default-channel)
                          :username (or username "Incoming Text")})}
         {:keys [status body error]} @(http/post slack-webhook-url options)]
     (if false
