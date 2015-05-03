@@ -20,7 +20,11 @@
                  [ring-server "0.4.0"]
                  [com.novemberain/monger "2.0.1"]
                  [metosin/compojure-api "0.20.0"]
-                 [metosin/ring-swagger-ui "2.1.1-M2"]]
+                 [metosin/ring-swagger-ui "2.1.1-M2"]
+                 [http-kit "2.1.16"]
+                 [ring/ring-codec "1.0.0"]
+                 [environ "1.0.0"]
+                 [cheshire "5.4.0"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "smslack.jar"
@@ -35,31 +39,32 @@
             [lein-environ "1.0.0"]
             [lein-ancient "0.6.5"]
             ]
-  
 
-  
+
+
   :ring {:handler smslack.handler/app
          :init    smslack.handler/init
          :destroy smslack.handler/destroy
          :uberwar-name "smslack.war"}
 
-  
-  
-  
+
+
+
   :profiles
   {:uberjar {:omit-source true
              :env {:production true}
-             
+
              :aot :all}
    :dev {:dependencies [[ring-mock "0.1.5"]
                         [ring/ring-devel "1.3.2"]
                         [pjstadig/humane-test-output "0.7.0"]
                         ]
          :source-paths ["env/dev/clj"]
-         
-         
-         
+
+
+
          :repl-options {:init-ns smslack.repl}
          :injections [(require 'pjstadig.humane-test-output)
                       (pjstadig.humane-test-output/activate!)]
-         :env {:dev true}}})
+         :env {:dev false}}
+   :production {:env {:production true}}})

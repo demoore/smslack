@@ -1,7 +1,6 @@
 (ns smslack.handler
   (:require [compojure.core :refer [defroutes routes]]
-            [smslack.routes.home :refer [home-routes]]
-            [smslack.routes.services :refer [service-routes]]
+            [smslack.routes.services :refer [slack-routes twilio-routes]]
             [smslack.middleware
              :refer [development-middleware production-middleware]]
             [smslack.session :as session]
@@ -69,8 +68,8 @@
 
 (def app
   (-> (routes
-        home-routes
-        service-routes
+        slack-routes
+        twilio-routes
         base-routes)
       development-middleware
       production-middleware))

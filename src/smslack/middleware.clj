@@ -11,7 +11,7 @@
             [ring.middleware.session.memory :refer [memory-store]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
-            
+
             ))
 
 (defn wrap-servlet-context [handler]

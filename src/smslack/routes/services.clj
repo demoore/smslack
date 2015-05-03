@@ -1,72 +1,43 @@
 (ns smslack.routes.services
   (:require [ring.util.http-response :refer :all]
             [compojure.api.sweet :refer :all]
-            [schema.core :as s]))
+            [smslack.twilio :as twilio]
+            [smslack.slack :as slack]))
 
-(s/defschema Thingie {:id Long
-                      :hot Boolean
-                      :tag (s/enum :kikka :kukka)
-                      :chief [{:name String
-                               :type #{{:id String}}}]})
+(defn text [body]
+  (let [text-vector (twilio/split-number-and-message body)]
+    (twilio/send-text (nth text-vector 0) (nth text-vector 1))))
 
-(defapi service-routes
+(defn text-to-slack [request]
+  (let [message (:Body (:params request))
+        from    (:From (:params request))]
+    (slack/send-message message :username from)))
+
+(defn respond-to-slack [request]
+  (let [message (:text (:params request))
+        from    (str "Sending from " (:user_name (:params request)))]
+    (slack/send-message message :username from)))
+
+(defn handle-slack [request]
+  (text (:text (:params request)))
+  (respond-to-slack request))
+
+(defapi slack-routes
   (ring.swagger.ui/swagger-ui
    "/swagger-ui")
   (swagger-docs
-    {:info {:title "Sample api"}})
+   {:info {:title "Sample api"}})
   (context* "/api" []
-            :tags ["thingie"]
+            (POST* "/slack/message" request
+                   :summary "Sends a text message"
+                   (ok (handle-slack request)))))
 
-            (GET* "/plus" []
-                  :return       Long
-                  :query-params [x :- Long, {y :- Long 1}]
-                  :summary      "x+y with query-parameters. y defaults to 1."
-                  (ok (+ x y)))
-
-            (POST* "/minus" []
-                   :return      Long
-                   :body-params [x :- Long, y :- Long]
-                   :summary     "x-y with body-parameters."
-                   (ok (- x y)))
-
-            (GET* "/times/:x/:y" []
-                  :return      Long
-                  :path-params [x :- Long, y :- Long]
-                  :summary     "x*y with path-parameters"
-                  (ok (* x y)))
-
-            (POST* "/divide" []
-                   :return      Double
-                   :form-params [x :- Long, y :- Long]
-                   :summary     "x/y with form-parameters"
-                   (ok (/ x y)))
-
-            (GET* "/power" []
-                  :return      Long
-                  :header-params [x :- Long, y :- Long]
-                  :summary     "x^y with header-parameters"
-                  (ok (long (Math/pow x y))))
-
-            (PUT* "/echo" []
-                  :return   [{:hot Boolean}]
-                  :body     [body [{:hot Boolean}]]
-                  :summary  "echoes a vector of anonymous hotties"
-                  (ok body))
-
-            (POST* "/echo" []
-                   :return   (s/maybe Thingie)
-                   :body     [thingie (s/maybe Thingie)]
-                   :summary  "echoes a Thingie from json-body"
-                   (ok thingie)))
-
-  (context* "/context" []
-            :tags ["context*"]
-            :summary "summary inherited from context"
-            (context* "/:kikka" []
-                      :path-params [kikka :- s/Str]
-                      :query-params [kukka :- s/Str]
-                      (GET* "/:kakka" []
-                            :path-params [kakka :- s/Str]
-                            (ok {:kikka kikka
-                                 :kukka kukka
-                                 :kakka kakka})))))
+(defapi twilio-routes
+  (ring.swagger.ui/swagger-ui
+   "/swagger-ui")
+  (swagger-docs
+   {:info {:title "Sample api"}})
+  (context* "/api" []
+            (POST* "/twilio/message" request
+                   :summary "This is where text messages get POSTed to"
+                   (ok (text-to-slack request)))))
